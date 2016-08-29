@@ -1,0 +1,10 @@
+escape ^t^t
+defscrollback 100000
+defhstatus c
+autodetach on
+
+defkanji utf-8
+defencoding utf-8
+encoding utf-8 utf-8
+
+startup_message off

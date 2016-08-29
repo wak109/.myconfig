@@ -1,0 +1,478 @@
+########################################################################
+###
+### Shell Script for Login Shell
+###
+### vim: set notextmode:
+###
+### SVN Reository:
+###
+###  - https://myprojectroot.googlecode.com/svn/trunk/.myconfig/
+###  - username: wak109
+###  - password: generated in https://code.google.com/hosting/settings
+###
+########################################################################
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+print_shell_functions()
+{
+	local file="$1"
+cat << '________cut_here________' > "${file}"
+########################################################################
+###
+### Shell Functions
+###
+########################################################################
+
+is_in()
+{
+	local _word="$1"
+	local _list="$2"
+	local _it
+
+	for _it in ${_list}; do
+		if [ "${_word}" = "${_it}" ]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+is_regex()
+{
+	local _word="$1"
+	local _reg="$2"
+
+	case "${_word}" in
+	${_reg})
+		return 0
+		;;
+	esac
+
+	return 1
+}
+
+is_cygwin()
+{
+	local _platform=`uname`
+
+	if is_regex "${_platform}" '*[cC][yY][gG][wW][iI][nN]*'; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+is_msys()
+{
+	local _platform=`uname -o`
+
+	if is_regex "${_platform}" '*[mM][sS][yY][sS]*'; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+is_mingw()
+{
+	local _platform=`uname`
+
+	if is_regex "${_platform}" '*[mM][iI][nN][gG][wW]*'; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+is_kame_project()
+{
+	local _platform=`uname`
+	local _kame1
+	local _kame2
+
+	if is_regex "${_platform}" '*BSD*'; then
+		_kame1=`sysctl net.inet6.ip6.kame_version | grep 'SNAP'`
+		_kame2=`sysctl net.inet6.ip6.kame_version | grep 'from cvs repository'`
+
+		if [ -n "${_kame1}" -o -n "${_kame2}" ]; then
+			return 0
+		fi
+	fi
+
+	return 1
+}
+
+is_no_space()
+{
+	if [ $# -ge 2 ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+is_mounted()
+{
+	local _dir="$1"
+	local _ret
+
+	_ret=`mount | grep "${_dir}"`
+	if [ -z "${_ret}" ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+set_path()
+{
+	local _path0="$1"
+	local _path=""
+	local _platform=`uname`
+	local _it=""
+	local _tmp=""
+
+	if [ -z "${_path0}" -a -n "${PATH}" ]; then
+		_path0=`echo ${PATH} | sed 's/:/ /g'`
+	fi
+
+	###
+	### Special PATH for KAME project
+	###
+	if is_kame_project; then
+		_path0="/usr/local/v6/bin /usr/local/v6/sbin ${_path0}"
+	fi
+
+	for _it in ${_path0}; do
+		###
+		### Handling the path including space character in it
+		###
+		if is_regex ${_it} '*\\'; then
+			_tmp="${_tmp}${_it}"
+			continue
+		else
+			if [ "x${_tmp}" != "x" ]; then
+				_it="${_tmp}${_it} "
+				_tmp=""
+			fi
+		fi
+		_it=`echo ${_it} | sed 's/\\\\/\ /g'`
+		if [ ! -d "${_it}" ]; then
+			continue
+		fi
+		if is_in ${_it} "${_path}"; then
+			continue
+		fi
+		if [ -n "${_path}" ]; then
+			_path="${_path}:${_it}"
+		else
+			_path="${_it}"
+		fi
+	done
+
+	PATH=${_path} export PATH
+}
+
+set_shell()
+{
+	local _shell=${SHELL}
+	if is_cygwin; then
+		_shell="/bin/bash"
+	fi
+	if is_mingw; then
+		_shell="/bin/bash"
+	fi
+
+	case "${_shell}" in
+	*/sh)
+		stty erase 
+		ENV="${HOME}/.shrc"; export ENV
+		;;
+	*/ksh)
+		VISUAL=emacs; export VISUAL
+		;;
+	*/bash)
+		PS1='\h\$ '; export PS1
+		;;
+	esac
+}
+
+check_command()
+{
+	local _cmd="$1"
+	local _path="$2"
+	local _ifs=${IFS}
+	local _it
+
+	IFS=":"
+
+	if [ -z "${_path}" ]; then
+		_path="${PATH}"
+	fi
+
+	for _it in ${_path}; do
+		if [ -x "${_it}/${_cmd}" ]; then
+			IFS=${_ifs}
+			return 0
+		fi
+	done
+
+	IFS=${_ifs}
+	return 1
+}
+
+preferable_command()
+{
+	local _cmdlist="$1"
+	local _path="$2"
+	local _it
+
+	if [ -z "${_path}" ]; then
+		_path="${PATH}"
+	fi
+
+	for _it in ${_cmdlist}; do
+		if check_command "${_it}" "${_path}"; then
+			echo "${_it}"
+			return
+		fi
+	done
+}
+
+set_default_editor()
+{
+	local _path="$1"
+	local _vi_list="vim nvi vi"
+	local _vimrc="${HOME}/.vimrc"
+	local _cmd
+
+	if [ -z "${_path}" ]; then
+		_path="${PATH}"
+	fi
+
+	_cmd=`preferable_command "${_vi_list}" "${_path}"`
+	case ${_cmd} in
+
+	vim)
+		alias ex='vim -e'
+		alias vi='vim'
+		alias view='vim -R'
+
+		if [ ! -f "${_vimrc}" ]; then
+			cat > "${_vimrc}" <<- '____vimrc____'
+				syntax enable
+				set encoding=utf8
+				set viminfo=
+			____vimrc____
+		fi
+		;;
+	nvi)
+		alias ex='nex'
+		alias vi='nvi'
+		alias view='nview'
+		;;
+	esac
+}
+
+is_ls_color()
+{
+	 ls --color=always > /dev/null 2>&1 ; return $?
+}
+
+set_env ()
+{
+	local	sysname=`uname -s`
+	local	release=`uname -r`
+
+	if [ x"${SSH_CLIENT}" != x ]; then
+		REMOTEHOST=`echo ${SSH_CLIENT} | awk '{ print $1 }'` export REMOTEHOST
+	fi
+
+	if check_command jless; then
+		JLESSCHARSET=japanese export JLESSCHARSET
+		alias less='jless'
+	fi
+	if check_command uim-xim; then
+		XMODIFIERS="@im=uim" export XMODIFIERS
+		GTK_IM_MODULE=uim export GTK_IM_MODULE
+	elif check_command kinput2; then
+		XMODIFIERS="@im=kinput2" export XMODIFIERS
+	fi
+
+	if is_ls_color; then
+		alias ls='ls --color=always'
+	fi
+
+	case ${sysname} in
+
+	CYGWIN*)
+		LANG=ja_JP.SJIS export LANG
+		;;
+	MSYS*)
+		LANG=ja_JP.UTF-8 export LANG
+		;;
+	esac
+}
+
+convert_path_posix_to_windows()
+{
+	echo "$1" | sed -e 's/^\/cygdrive\/\(.\)/\1:/' -e 's/\//\\/g'
+}
+
+windows_home()
+{
+	echo "${USERPROFILE}" | sed -e 's/^\(.\):/\/cygdrive\/\1/' -e 's/\\/\//g'
+}
+
+mount_unix_home()
+{
+	local _home="$1"
+	local _unix_home
+	local _windows_home
+
+	### nothing has to be done if no space is included in $HOME
+	###
+	if is_no_space ${_home}; then
+		return
+	fi
+
+	_unix_home="/home/`id -un`"
+	_windows_home=`convert_path_posix_to_windows "${_home}"`
+
+	if [ ! -d "${_unix_home}" ]; then
+		mkdir -p ${_unix_home}
+	fi
+	if is_mounted ${_unix_home}; then
+		:
+	else
+		mount "${_windows_home}" ${_unix_home}
+	fi
+
+	HOME=${_unix_home}
+}
+
+set_ssh_agent()
+{
+	local _dot_ssh_agent="${HOME}/.ssh_agent"
+
+	if ! check_command ssh-agent; then
+		:
+	elif ! check_command ssh-add; then
+		:
+	elif [ -n "${SSH_AUTH_SOCK}" -a -n "${SSH_AGENT_PID}" ]; then
+		:
+	elif [ ! -r "${_dot_ssh_agent}" ]; then
+		ssh-agent -s > "${_dot_ssh_agent}"
+		chmod 600 "${_dot_ssh_agent}"
+		. "${_dot_ssh_agent}" > /dev/null
+		ssh-add
+	else
+		. "${_dot_ssh_agent}" > /dev/null
+		ssh-add -l > /dev/null
+		if [ $? -ne 0 ]; then
+			ssh-agent -s > "${_dot_ssh_agent}"
+			chmod 600 "${_dot_ssh_agent}"
+			. "${_dot_ssh_agent}" > /dev/null
+			ssh-add
+		fi
+	fi
+}
+
+set_aliases()
+{
+	if check_command openssl; then
+		alias encrypt='openssl enc -e -aes-256-cbc -in'
+		alias decrypt='openssl enc -d -aes-256-cbc -in'
+	fi
+}
+________cut_here________
+}
+
+########################################################################
+###
+### Main
+###
+########################################################################
+shell_lib_file="${HOME}/.shlib"
+shell_ext_file="${HOME}/.shext"
+pathlist0_file="${HOME}/.pathlist0"
+pathlist_file="${HOME}/.pathlist"
+
+print_shell_functions ${shell_lib_file}
+
+. ${shell_lib_file}
+
+if is_cygwin; then
+	:
+#	mount_unix_home "${HOME}"
+#	HOME=`windows_home`; export HOME
+#	if [ -d ${HOME}/Home ]; then
+#		HOME=${HOME}/Home; export HOME
+#	fi
+fi
+
+path_list="					\
+	/bin					\
+	/sbin					\
+	/usr/bin				\
+	/usr/sbin				\
+	/usr/pkg/bin				\
+	/usr/pkg/sbin				\
+	/usr/local/bin				\
+	/usr/local/sbin				\
+	/usr/pkg/bin				\
+	/usr/pkg/sbin				\
+	/usr/X11R6/bin				\
+	/usr/X11R7/bin				\
+	/usr/pkg/XFree86/bin			\
+	/usr/pkg/xorg/bin			\
+	${HOME}/bin				\
+	${HOME}/cmd				\
+	${HOME}/.cabal-sandbox/bin		\
+	"
+
+if [ -r ${pathlist0_file} ]; then
+	for _line in `cat ${pathlist0_file} | sed '/^#/d'`; do
+		path_list=`echo ${_line} ${path_list}`
+	done
+fi
+
+if [ -r ${pathlist_file} ]; then
+
+	while read _line; do
+		if is_regex "$_line" '#*'; then
+			continue
+		fi
+		if [ is_cygwin -o is_msys ]; then
+			_line=`cygpath -m -s "${_line}" 2> /dev/null`
+			if [ "x" != "x${_line}" ]; then
+				_line=`cygpath -u "${_line}"`
+			fi
+		fi		
+		if [ "x" != "x${_line}" ]; then
+			path_list=`echo ${path_list} ${_line}`
+		fi
+	done < ${pathlist_file}
+fi
+
+
+set_path "${path_list}"
+
+if ! is_regex $- '*i*'; then
+	return
+fi
+
+###
+### Interactive Shell
+###
+set_shell
+set_default_editor
+#set_ssh_agent
+set_env
+set_aliases
+
+if [ -r ${shell_ext_file} ]; then
+	. ${shell_ext_file}
+fi
+
+cd ${HOME}
