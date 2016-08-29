@@ -13,12 +13,22 @@ Usage
 1. Clone https://github.com/wak109/.myconfig.git to your home directory.
 
 
-   ```
-   git clone https://github.com/wak109/.myconfig.git
+   ``` sh
+   $ git clone https://github.com/wak109/.myconfig.git
    ```
 
    .myconfig directory will be created.
 
+
+2. Create symbilic links.
+
+
+   ``` sh
+   $ ln -s .myconfig/.screenrc
+   $ ln -s .myconfig/.xinitrc
+   $ ln -s .myconfig/.shrc .bashrc
+   $ ln -s .myconfig/.shrc .bash_profile
+   ```
 
 2. (OPTIONAL) Create the file (~/.pathlist) to add more paths to PATH environment variable.
    Windows PATH cnd Unix PATH an be mixed up for MSYS and Cygwin.
