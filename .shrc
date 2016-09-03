@@ -192,7 +192,7 @@ set_shell()
 		VISUAL=emacs; export VISUAL
 		;;
 	*/bash)
-		PS1='\h\$ '; export PS1
+		PS1='\[\e[30m\e[47m\]\W\$\[\e[0m\] '; export PS1
 		;;
 	esac
 }
