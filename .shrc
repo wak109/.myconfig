@@ -4,12 +4,6 @@
 ###
 ### vim: set notextmode:
 ###
-### SVN Reository:
-###
-###  - https://myprojectroot.googlecode.com/svn/trunk/.myconfig/
-###  - username: wak109
-###  - password: generated in https://code.google.com/hosting/settings
-###
 ########################################################################
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
@@ -412,12 +406,10 @@ if is_cygwin; then
 fi
 
 path_list="					\
-	/bin					\
-	/sbin					\
 	/usr/bin				\
 	/usr/sbin				\
-	/usr/pkg/bin				\
-	/usr/pkg/sbin				\
+	/bin					\
+	/sbin					\
 	/usr/local/bin				\
 	/usr/local/sbin				\
 	/usr/pkg/bin				\
@@ -428,7 +420,6 @@ path_list="					\
 	/usr/pkg/xorg/bin			\
 	${HOME}/bin				\
 	${HOME}/cmd				\
-	${HOME}/.cabal-sandbox/bin		\
 	"
 
 if [ -r ${pathlist0_file} ]; then
