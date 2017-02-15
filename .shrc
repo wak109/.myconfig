@@ -382,6 +382,18 @@ set_aliases()
 ________cut_here________
 }
 
+apply_cygpath()
+{
+	local _path="$1"
+
+	_path=`cygpath -m -s "${_path}" 2> /dev/null`
+	if [ "x" != "x${_path}" ]; then
+		_path=`cygpath -u "${_path}"`
+	fi
+
+	echo "${_path}"
+}
+
 ########################################################################
 ###
 ### Main
@@ -422,28 +434,30 @@ path_list="					\
 	${HOME}/cmd				\
 	"
 
+check_command cygpath
+HAS_CYGPATH=$?
+
 if [ -r ${pathlist0_file} ]; then
-	for _line in `cat ${pathlist0_file} | sed '/^#/d'`; do
-		path_list=`echo ${_line} ${path_list}`
+	for _line in `cat ${pathlist_file} | sed '/^#/d'`; do
+		if [ ${HAS_CYGPATH} -eq 0 ]; then
+			_line=`apply_cygpath "${_line}"`
+		fi		
+		if [ "x" != "x${_line}" ]; then
+			path_list=`echo ${_line} ${path_list}`
+		fi
 	done
 fi
 
 if [ -r ${pathlist_file} ]; then
 
-	while read _line; do
-		if is_regex "$_line" '#*'; then
-			continue
-		fi
-		if [ is_cygwin -o is_msys ]; then
-			_line=`cygpath -m -s "${_line}" 2> /dev/null`
-			if [ "x" != "x${_line}" ]; then
-				_line=`cygpath -u "${_line}"`
-			fi
+	for _line in `cat ${pathlist_file} | sed '/^#/d'`; do
+		if [ ${HAS_CYGPATH} -eq 0 ]; then
+			_line=`apply_cygpath "${_line}"`
 		fi		
 		if [ "x" != "x${_line}" ]; then
 			path_list=`echo ${path_list} ${_line}`
 		fi
-	done < ${pathlist_file}
+	done
 fi
 
 
