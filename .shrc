@@ -118,23 +118,29 @@ is_mounted()
 	fi
 }
 
+quick_set_path()
+{
+	for _path in $1; do
+		if [ ! -d "${_path}" ]; then
+			continue
+		fi
+		if [ -z "${PATH}" ]; then
+			PATH="${_path}"
+		else
+			PATH="${PATH}:${_path}"
+		fi
+	done
+}
+
 set_path()
 {
 	local _path0="$1"
 	local _path=""
-	local _platform=`uname`
 	local _it=""
 	local _tmp=""
 
 	if [ -z "${_path0}" -a -n "${PATH}" ]; then
 		_path0=`echo ${PATH} | sed 's/:/ /g'`
-	fi
-
-	###
-	### Special PATH for KAME project
-	###
-	if is_kame_project; then
-		_path0="/usr/local/v6/bin /usr/local/v6/sbin ${_path0}"
 	fi
 
 	for _it in ${_path0}; do
@@ -394,9 +400,38 @@ apply_cygpath()
 	echo "${_path}"
 }
 
+is_cached()
+{
+	local _file="$1"
+	local _cache="$2"
+
+	if [ ! -r "${_cache}" ]; then
+		return 1 
+	fi
+
+	local _file_time=`stat --format="%Z" ${_file}`
+	local _cache_time=`stat --format="%Z" ${_cache}`
+
+	if [ ${_file_time} -gt ${_cache_time} ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+echo "start" > /tmp/hehe
+
 read_pathlist_file()
 {
 	local _file="$1"
+	local _cache="${_file}.cache"
+
+	if is_cached "${_file}" "${_cache}"; then
+		cat ${_cache}
+		return 0
+	fi
+
+	echo -n "" > ${_cache}
 
 	check_command cygpath
 	HAS_CYGPATH=$?
@@ -405,8 +440,10 @@ read_pathlist_file()
 		if [ ${HAS_CYGPATH} -eq 0 ]; then
 			_line=`apply_cygpath "${_line}"`
 		fi		
-		echo -n "${_line} "
+		echo -n "${_line} " >> ${_cache}
 	done
+
+	cat ${_cache}
 }
 
 ########################################################################
@@ -459,8 +496,7 @@ if [ -r ${pathlist_file} ]; then
 	path_list="${path_list} ${extra_path}"
 fi
 
-
-set_path "${path_list}"
+quick_set_path "${path_list}"
 
 if ! is_regex $- '*i*'; then
 	return
@@ -469,7 +505,9 @@ fi
 ###
 ### Interactive Shell
 ###
+
 set_shell
+
 set_default_editor
 #set_ssh_agent
 set_env
