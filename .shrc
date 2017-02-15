@@ -10,6 +10,7 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin
 print_shell_functions()
 {
 	local file="$1"
+
 cat << '________cut_here________' > "${file}"
 ########################################################################
 ###
@@ -385,8 +386,6 @@ set_aliases()
 		alias decrypt='openssl enc -d -aes-256-cbc -in'
 	fi
 }
-________cut_here________
-}
 
 apply_cygpath()
 {
@@ -409,8 +408,8 @@ is_cached()
 		return 1 
 	fi
 
-	local _file_time=`stat --format="%Z" ${_file}`
-	local _cache_time=`stat --format="%Z" ${_cache}`
+	local _file_time=`stat --format="%Y" ${_file}`
+	local _cache_time=`stat --format="%Y" ${_cache}`
 
 	if [ ${_file_time} -gt ${_cache_time} ]; then
 		return 1
@@ -418,8 +417,6 @@ is_cached()
 		return 0
 	fi
 }
-
-echo "start" > /tmp/hehe
 
 read_pathlist_file()
 {
@@ -446,11 +443,17 @@ read_pathlist_file()
 	cat ${_cache}
 }
 
+________cut_here________
+}
+
 ########################################################################
 ###
 ### Main
 ###
 ########################################################################
+#
+
+
 shell_lib_file="${HOME}/.shlib"
 shell_ext_file="${HOME}/.shext"
 pathlist0_file="${HOME}/.pathlist0"
