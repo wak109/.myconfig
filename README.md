@@ -3,7 +3,7 @@
 .myconfig
 ========
 
-The .myconfig directory
+Quick setup for shell environment.
 
 
 
