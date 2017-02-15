@@ -30,8 +30,10 @@ Usage
    $ ln -s .myconfig/.shrc .bash_profile
    ```
 
-2. (OPTIONAL) Create the file (~/.pathlist) to add more paths to PATH environment variable.
-   Windows PATH cnd Unix PATH an be mixed up for MSYS and Cygwin.
+2. (OPTIONAL) Create the file (~/.pathlist) to add more paths
+   to PATH environment variable.
+
+   Windows PATH, Unix PATH, mixed up PATH for MSYS and Cygwin can be used.
 
 
    ``` .pathlist
@@ -42,4 +44,5 @@ Usage
    /usr/local/bin
    ```
 
-3. (OPTIONAL) Create the shell script file (~/.shext) to execute an additional script.
+3. (OPTIONAL) Create the shell script file (~/.shext) to
+   execute an additional script.
