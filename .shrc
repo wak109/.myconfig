@@ -394,6 +394,21 @@ apply_cygpath()
 	echo "${_path}"
 }
 
+read_pathlist_file()
+{
+	local _file="$1"
+
+	check_command cygpath
+	HAS_CYGPATH=$?
+
+	cat ${_file} | sed '/^#/d' | while read _line; do
+		if [ ${HAS_CYGPATH} -eq 0 ]; then
+			_line=`apply_cygpath "${_line}"`
+		fi		
+		echo -n "${_line} "
+	done
+}
+
 ########################################################################
 ###
 ### Main
@@ -434,30 +449,14 @@ path_list="					\
 	${HOME}/cmd				\
 	"
 
-check_command cygpath
-HAS_CYGPATH=$?
-
 if [ -r ${pathlist0_file} ]; then
-	for _line in `cat ${pathlist_file} | sed '/^#/d'`; do
-		if [ ${HAS_CYGPATH} -eq 0 ]; then
-			_line=`apply_cygpath "${_line}"`
-		fi		
-		if [ "x" != "x${_line}" ]; then
-			path_list=`echo ${_line} ${path_list}`
-		fi
-	done
+	extra_path=`read_pathlist_file "${pathlist0_file}"`
+	path_list="${extra_path} ${path_list}"
 fi
 
 if [ -r ${pathlist_file} ]; then
-
-	for _line in `cat ${pathlist_file} | sed '/^#/d'`; do
-		if [ ${HAS_CYGPATH} -eq 0 ]; then
-			_line=`apply_cygpath "${_line}"`
-		fi		
-		if [ "x" != "x${_line}" ]; then
-			path_list=`echo ${path_list} ${_line}`
-		fi
-	done
+	extra_path=`read_pathlist_file "${pathlist_file}"`
+	path_list="${path_list} ${extra_path}"
 fi
 
 
