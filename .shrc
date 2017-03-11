@@ -119,20 +119,6 @@ is_mounted()
 	fi
 }
 
-quick_set_path()
-{
-	for _path in $1; do
-		if [ ! -d "${_path}" ]; then
-			continue
-		fi
-		if [ -z "${PATH}" ]; then
-			PATH="${_path}"
-		else
-			PATH="${PATH}:${_path}"
-		fi
-	done
-}
-
 set_path()
 {
 	local _path0="$1"
@@ -472,34 +458,27 @@ if is_cygwin; then
 #	fi
 fi
 
-path_list="					\
-	/usr/bin				\
-	/usr/sbin				\
-	/bin					\
-	/sbin					\
-	/usr/local/bin				\
-	/usr/local/sbin				\
-	/usr/pkg/bin				\
-	/usr/pkg/sbin				\
-	/usr/X11R6/bin				\
-	/usr/X11R7/bin				\
-	/usr/pkg/XFree86/bin			\
-	/usr/pkg/xorg/bin			\
-	${HOME}/bin				\
-	${HOME}/cmd				\
-	"
-
 if [ -r ${pathlist0_file} ]; then
 	extra_path=`read_pathlist_file "${pathlist0_file}"`
-	path_list="${extra_path} ${path_list}"
+	for _path in ${extra_path}; do
+		if [ ! -d "${_path}" ]; then
+			continue
+		fi
+		PATH="${_path}:${PATH}"
+	done
+	PATH=`echo ${PATH} | sed -e 's/:$//'`
 fi
 
 if [ -r ${pathlist_file} ]; then
 	extra_path=`read_pathlist_file "${pathlist_file}"`
-	path_list="${path_list} ${extra_path}"
+	for _path in ${extra_path}; do
+		if [ ! -d "${_path}" ]; then
+			continue
+		fi
+		PATH="${PATH}:${_path}"
+	done
+	PATH=`echo ${PATH} | sed -e 's/^://'`
 fi
-
-quick_set_path "${path_list}"
 
 if ! is_regex $- '*i*'; then
 	return
