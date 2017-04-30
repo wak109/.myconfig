@@ -5,7 +5,7 @@
 #
 ################################################################
 
-if $(type cygpath 2> /dev/null); then
+if $(type cygpath > /dev/null 2>&1); then
     declare -r HAS_CYGPATH=true
 else
     declare -r HAS_CYGPATH=false
