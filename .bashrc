@@ -5,11 +5,6 @@
 #
 ################################################################
 
-if $(type cygpath > /dev/null 2>&1); then
-    declare -r HAS_CYGPATH=true
-else
-    declare -r HAS_CYGPATH=false
-fi
 
 ################################################################
 # True if called in interactive shell
@@ -37,16 +32,15 @@ function is_interactive() {
 #   Unix format path name
 ################################################################
 
-function convert_winpath() {
-    local mixed=$(cygpath -m -s "$1" 2> /dev/null)
-
-    if [[ "${mixed}" != "" && "${mixed}" != "$1" ]]; then
-        echo $(cygpath -u "${mixed}")
+function get_unix_path() {
+    if [[ "$1" =~ ^[a-zA-Z]: ]]; then
+        echo $1 | sed \
+            -e 's/\\/\//g' \
+            -e 's/^\([a-zA-Z]\):/\/cygdrive\/\1/'
     else
-        echo "$1"
+        echo $1
     fi
 }
-
 
 ################################################################
 # Convert pathname list file to PATH format
@@ -55,9 +49,10 @@ function convert_winpath() {
 #   $1 : filename
 # Returns:
 #   String in PATH format
+#   Empty string if file doesn't exist
 ################################################################
 
-function get_path_list() {
+function read_pathlist() {
     local filename="$1"
 
     if [[ ! -e ${filename} ]]; then
@@ -65,16 +60,12 @@ function get_path_list() {
     fi
 
     while read path; do
-        if ${HAS_CYGPATH}; then
-            echo $(convert_winpath "${path}")
-        else
-            echo ${path}
-        fi
+        echo $(get_unix_path "${path}")
     done < "${filename}" | paste -s -d ':' -
 }
 
 ################################################################
-# Set PATH env
+# get PATH env
 #
 # Globals
 #   PATH
@@ -84,23 +75,21 @@ function get_path_list() {
 #   None
 ################################################################
 
-function set_path_env() {
-    local pathlist=$(get_path_list ${HOME}/.pathlist 2> /dev/null)
-    local pathlist0=$(get_path_list ${HOME}/.pathlist0 2> /dev/null)
+function get_path_env() {
+    local pathlist=$(read_pathlist ${HOME}/.pathlist 2> /dev/null)
+    local pathlist0=$(read_pathlist ${HOME}/.pathlist0 2> /dev/null)
 
-    if [[ ! -e "${pathlist0}" ]]; then
-        PATH="${pathlist0}:${PATH}"
-    fi
-    if [[ ! -e "${pathlist}" ]]; then
-        PATH="${PATH}:${pathlist}"
-    fi
+    echo "${pathlist0}:${PATH}:${pathlist}" | sed \
+        -e 's/^://' \
+        -e 's/::/:/' \
+        -e 's/:$//'
 }
 
 
 ################################################################
 # Main
 
-set_path_env
+declare -x PATH=$(get_path_env)
 
 # Exit if not interactive shell
 if ! $(is_interactive); then
