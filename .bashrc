@@ -85,8 +85,8 @@ function get_path_list() {
 ################################################################
 
 function set_path_env() {
-    local pathlist=$(get_path_list ${HOME}/.pathlist > /dev/null 2>&1)
-    local pathlist0=$(get_path_list ${HOME}/.pathlist0 > /dev/null 2>&1)
+    local pathlist=$(get_path_list ${HOME}/.pathlist 2> /dev/null)
+    local pathlist0=$(get_path_list ${HOME}/.pathlist0 2> /dev/null)
 
     if [[ ! -e "${pathlist0}" ]]; then
         PATH="${pathlist0}:${PATH}"
