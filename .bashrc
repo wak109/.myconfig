@@ -5,6 +5,11 @@
 #
 ################################################################
 
+if $(type cygpath 2> /dev/null); then
+    declare -r HAS_CYGPATH=true
+else
+    declare -r HAS_CYGPATH=false
+fi
 
 ################################################################
 # True if called in interactive shell
@@ -33,11 +38,6 @@ function is_interactive() {
 ################################################################
 
 function convert_winpath() {
-    if ! $(type cygpath > /dev/null); then
-        echo $1
-        return
-    fi
-
     local mixed=$(cygpath -m -s "$1" 2> /dev/null)
 
     if [[ "${mixed}" != "" && "${mixed}" != "$1" ]]; then
@@ -60,16 +60,17 @@ function convert_winpath() {
 function get_path_list() {
     local filename="$1"
 
-    type cygpath > /dev/null
-    local do_convert=$?
+    if [[ ! -e ${filename} ]]; then
+        echo ""
+    fi
 
     while read path; do
-        if [[ ${do_convert} -eq 0 ]]; then
+        if ${HAS_CYGPATH}; then
             echo $(convert_winpath "${path}")
         else
             echo ${path}
         fi
-    done < ${HOME}/.pathlist | paste -s -d ':' -
+    done < "${filename}" | paste -s -d ':' -
 }
 
 ################################################################
@@ -84,13 +85,13 @@ function get_path_list() {
 ################################################################
 
 function set_path_env() {
-    local pathlist=$(get_path_list ${HOME}/.pathlist)
-    local pathlist0=$(get_path_list ${HOME}/.pathlist0)
+    local pathlist=$(get_path_list ${HOME}/.pathlist > /dev/null 2>&1)
+    local pathlist0=$(get_path_list ${HOME}/.pathlist0 > /dev/null 2>&1)
 
-    if [[ ! -e ${pathlist0} ]]; then
+    if [[ ! -e "${pathlist0}" ]]; then
         PATH="${pathlist0}:${PATH}"
     fi
-    if [[ ! -e ${pathlist} ]]; then
+    if [[ ! -e "${pathlist}" ]]; then
         PATH="${PATH}:${pathlist}"
     fi
 }
@@ -103,7 +104,7 @@ set_path_env
 
 # Exit if not interactive shell
 if ! $(is_interactive); then
-    return
+    return 0
 fi
 
 ################################################################
