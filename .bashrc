@@ -5,6 +5,8 @@
 #
 ################################################################
 
+declare -r pri_plist="${HOME}/.pathlist0"
+declare -r post_plist="${HOME}/.pathlist"
 
 ################################################################
 # True if called in interactive shell
@@ -15,13 +17,12 @@
 ################################################################
 
 function is_interactive() {
-    if [[ "$-" =~ 'i' ]]; then
+    if [[ "$-" =~ i ]]; then
         return 0
     else
         return 1
     fi
 }
-
 
 ################################################################
 # Convert Windows path to Cygwin path without space
@@ -33,6 +34,8 @@ function is_interactive() {
 ################################################################
 
 function get_unix_path() {
+
+    # if path is a Windows path (e.g. c:\Users\guest)
     if [[ "$1" =~ ^[a-zA-Z]: ]]; then
         echo $1 | sed \
             -e 's/\\/\//g' \
@@ -52,7 +55,7 @@ function get_unix_path() {
 #   Empty string if file doesn't exist
 ################################################################
 
-function read_pathlist() {
+function read_plist() {
     local filename="$1"
 
     if [[ ! -e ${filename} ]]; then
@@ -65,31 +68,36 @@ function read_pathlist() {
 }
 
 ################################################################
-# get PATH env
+# Extend PATH env
+#
+#   Read path list file, and add those pathes to PATH
 #
 # Globals
 #   PATH
 # Arguments:
 #   None
 # Returns:
-#   None
+#   Extended PATH env
 ################################################################
 
-function get_path_env() {
-    local pathlist=$(read_pathlist ${HOME}/.pathlist 2> /dev/null)
-    local pathlist0=$(read_pathlist ${HOME}/.pathlist0 2> /dev/null)
+function extend_path() {
+    local path="$1"
 
-    echo "${pathlist0}:${PATH}:${pathlist}" | sed \
+    local pri_path=$(read_plist ${pri_plist} 2> /dev/null)
+    local post_path=$(read_plist ${post_plist} 2> /dev/null)
+
+    echo "${pri_path}:${path}:${post_path}" | sed \
         -e 's/^://' \
         -e 's/::/:/' \
         -e 's/:$//'
 }
 
-
 ################################################################
 # Main
+################################################################
 
-declare -x PATH=$(get_path_env)
+declare -x PATH=$(extend_path "${PATH}")
+
 
 # Exit if not interactive shell
 if ! $(is_interactive); then
@@ -98,6 +106,7 @@ fi
 
 ################################################################
 # Interactive shell
+################################################################
 
 declare -x PS1='\[\e[30m\e[47m\]\W\$\[\e[0m\] '
 
