@@ -123,24 +123,6 @@ function update_ssh_agent() {
 }
 
 ################################################################
-# Run ssh-agent script
-#
-# Arguments:
-#   None
-# Returns:
-#   None
-################################################################
-
-function run_ssh_agent() {
-    if [[ -n ${SSH_AUTH_SOCK} \
-        && -n ${SSH_AGENT_PID} \
-        && -S ${SSH_AUTH_SOCK} \
-        && $(get_command ${SSH_AGENT_PID}) == 'ssh-agent' ]]; then
-        ssh-add
-    fi
-}
-
-################################################################
 # Setup the environment for ssh-agent
 #
 # Arguments:
@@ -166,7 +148,7 @@ function setup_ssh_agent() {
     if [[ ! -r ${script} ]]; then
         update_ssh_agent ${script}
     fi
-    . ${script}
+    . ${script} > /dev/null 2>&1
 
     # Return if ssh-add successfully finishes
     if $(ssh-add > /dev/null 2>&1); then
@@ -174,7 +156,7 @@ function setup_ssh_agent() {
     fi
 
     update_ssh_agent "${script}"
-    . ${script}
+    . ${script} > /dev/null 2>&1
     ssh-add
 }
 
