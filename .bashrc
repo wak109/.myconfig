@@ -7,6 +7,7 @@
 
 declare -r pri_plist="${HOME}/.pathlist0"
 declare -r post_plist="${HOME}/.pathlist"
+declare -r ssh_agent_file="${HOME}/.ssh_agent"
 
 ################################################################
 # True if called in interactive shell
@@ -93,11 +94,68 @@ function extend_path() {
 }
 
 ################################################################
+# Update ssh-agent script
+#
+# Arguments:
+#   $1 : script filename
+# Returns:
+#   None
+################################################################
+
+function update_ssh_agent() {
+    local script="$1"
+
+    ssh-agent -s > "${script}" 2>&1
+    chmod 600 "${script}"
+}
+
+################################################################
+# Run ssh-agent script
+#
+# Arguments:
+#   $1 : script filename
+# Returns:
+#   None
+################################################################
+
+function run_ssh_agent() {
+    local script="$1"
+
+    . "${ssh_agent_file}" > /dev/null 2>&1
+    ssh-add
+}
+
+################################################################
+# Setup the environment for ssh-agent
+#
+# Arguments:
+#   None
+# Returns:
+#   None
+################################################################
+
+function setup_ssh_agent() {
+    if ! $(type ssh-agent > /dev/null 2>&1) \
+        || ! $(type ssh-add > /dev/null 2>&1) \
+        || [[ -n ${SSH_AUTH_SOCK} && -n ${SSH_AGENT_PID} ]]; then
+        return 0
+    elif [[ ! -x ${ssh_agent_file} ]]; then
+        update_ssh_agent "${ssh_agent_file}"
+    fi
+    run_ssh_agent "${ssh_agent_file}"
+
+    # ssh-add fails if script file is obsoleted
+    if ! $(ssh-add -l > /dev/null 2>&1); then
+        update_ssh_agent "${ssh_agent_file}"
+        run_ssh_agent "${ssh_agent_file}"
+    fi
+}
+
+################################################################
 # Main
 ################################################################
 
 declare -x PATH=$(extend_path "${PATH}")
-
 
 # Exit if not interactive shell
 if ! $(is_interactive); then
