@@ -121,7 +121,7 @@ function update_ssh_agent() {
 function run_ssh_agent() {
     local script="$1"
 
-    . "${ssh_agent_file}" > /dev/null 2>&1
+    . "${script}" > /dev/null 2>&1
     ssh-add
 }
 
@@ -135,19 +135,21 @@ function run_ssh_agent() {
 ################################################################
 
 function setup_ssh_agent() {
+    local script="${ssh_agent_file}"
+
     if ! $(type ssh-agent > /dev/null 2>&1) \
         || ! $(type ssh-add > /dev/null 2>&1) \
         || [[ -n ${SSH_AUTH_SOCK} && -n ${SSH_AGENT_PID} ]]; then
         return 0
-    elif [[ ! -x ${ssh_agent_file} ]]; then
-        update_ssh_agent "${ssh_agent_file}"
+    elif [[ ! -r ${script} ]]; then
+        update_ssh_agent "${script}"
     fi
-    run_ssh_agent "${ssh_agent_file}"
+    run_ssh_agent "${script}"
 
     # ssh-add fails if script file is obsoleted
     if ! $(ssh-add -l > /dev/null 2>&1); then
-        update_ssh_agent "${ssh_agent_file}"
-        run_ssh_agent "${ssh_agent_file}"
+        update_ssh_agent "${script}"
+        run_ssh_agent "${script}"
     fi
 }
 
