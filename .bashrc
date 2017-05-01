@@ -94,6 +94,19 @@ function extend_path() {
 }
 
 ################################################################
+# Get command name
+#
+# Arguments:
+#   $1 : Process ID
+# Returns:
+#   None
+################################################################
+
+function get_command_name() {
+    ps h --pid $1 -o comm
+}
+
+################################################################
 # Update ssh-agent script
 #
 # Arguments:
@@ -113,16 +126,18 @@ function update_ssh_agent() {
 # Run ssh-agent script
 #
 # Arguments:
-#   $1 : script filename
+#   None
 # Returns:
 #   None
 ################################################################
 
 function run_ssh_agent() {
-    local script="$1"
-
-    . "${script}" > /dev/null 2>&1
-    ssh-add
+    if [[ -n ${SSH_AUTH_SOCK} \
+        && -n ${SSH_AGENT_PID} \
+        && -S ${SSH_AUTH_SOCK} \
+        && $(get_command ${SSH_AGENT_PID}) == 'ssh-agent' ]]; then
+        ssh-add
+    fi
 }
 
 ################################################################
@@ -137,20 +152,30 @@ function run_ssh_agent() {
 function setup_ssh_agent() {
     local script="${ssh_agent_file}"
 
+    # Return if no ssh-agent command
     if ! $(type ssh-agent > /dev/null 2>&1) \
-        || ! $(type ssh-add > /dev/null 2>&1) \
-        || [[ -n ${SSH_AUTH_SOCK} && -n ${SSH_AGENT_PID} ]]; then
+        || ! $(type ssh-add > /dev/null 2>&1); then
         return 0
-    elif [[ ! -r ${script} ]]; then
-        update_ssh_agent "${script}"
     fi
-    run_ssh_agent "${script}"
 
-    # ssh-add fails if script file is obsoleted
-    if ! $(ssh-add -l > /dev/null 2>&1); then
-        update_ssh_agent "${script}"
-        run_ssh_agent "${script}"
+    # Return if ssh-add successfully finishes
+    if $(ssh-add > /dev/null 2>&1); then
+        return 0
     fi
+
+    if [[ ! -r ${script} ]]; then
+        update_ssh_agent ${script}
+    fi
+    . ${script}
+
+    # Return if ssh-add successfully finishes
+    if $(ssh-add > /dev/null 2>&1); then
+        return 0
+    fi
+
+    update_ssh_agent "${script}"
+    . ${script}
+    ssh-add
 }
 
 ################################################################
