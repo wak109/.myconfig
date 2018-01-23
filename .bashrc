@@ -26,27 +26,6 @@ function is_interactive() {
 }
 
 ################################################################
-# Convert Windows path to Cygwin path without space
-#
-# Arguments:
-#   $1 : pathname
-# Return:
-#   Unix format path name
-################################################################
-
-function get_unix_path() {
-
-    # if path is a Windows path (e.g. c:\Users\guest)
-    if [[ "$1" =~ ^[a-zA-Z]: ]]; then
-        echo $1 | sed \
-            -e 's/\\/\//g' \
-            -e 's/^\([a-zA-Z]\):/\/cygdrive\/\1/'
-    else
-        echo $1
-    fi
-}
-
-################################################################
 # Convert pathname list file to PATH format
 #
 # Arguments:
@@ -61,11 +40,11 @@ function read_plist() {
 
     if [[ ! -e ${filename} ]]; then
         echo ""
+    elif $(type cygpath > /dev/null 2>&1); then 
+        cat "${filename}" | xargs cygpath | paste -s -d ':' -
+    else
+        cat "${filename}" | paste -s -d ':' -
     fi
-
-    while read path; do
-        echo $(get_unix_path "${path}")
-    done < "${filename}" | paste -s -d ':' -
 }
 
 ################################################################

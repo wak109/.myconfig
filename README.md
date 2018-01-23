@@ -22,19 +22,30 @@ Usage
 
 2. Create symbilic links.
 
+   - msys2
 
    ``` sh
-   $ ln -s .myconfig/.screenrc
+   $ mklink .tmux.conf .myconfig\.tmux.conf
+   $ mklink .xinitrc .myconfig\.xinitrc
+   $ mklink .bashrc .myconfig/.bashrc
+   $ mklink .bash_profile .myconfig\.bashrc
+   ```
+   (cmd.exe as Administrator)
+
+
+   - Linux
+
+   ``` sh
+   $ ln -s .myconfig/.tmux.conf
    $ ln -s .myconfig/.xinitrc
-   $ ln -s .myconfig/.shrc .bashrc
-   $ ln -s .myconfig/.shrc .bash_profile
+   $ ln -s .myconfig/.bashrc .bashrc
+   $ ln -s .myconfig/.bashrc .bash_profile
    ```
 
-2. (OPTIONAL) Create the file (~/.pathlist) to add more paths
+3. (OPTIONAL) Create the file (~/.pathlist) to add more paths
    to PATH environment variable.
 
    Windows PATH, Unix PATH, mixed up PATH for MSYS and Cygwin can be used.
-
 
    ``` .pathlist
    c:\\Windows\\System32
