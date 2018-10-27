@@ -4,14 +4,16 @@ set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 
 Plugin 'VundleVim/Vundle.vim'
+"
+" 1. git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
-" 1. Add the vim plugin in the form of
+" 2. Add the vim plugin in the form of
 "
 "    Plugin '[Github Author]/[Github repo]'
 "
-" 2. Exec :PluginInstall
+" 3. Exec :PluginInstall
 "
-" 3. Visit https://vimawesome.com/ to search the vim plugin
+" 4. Visit https://vimawesome.com/ to search the vim plugin
 "
 "
 Plugin 'leafgarland/typescript-vim'
