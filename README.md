@@ -30,7 +30,7 @@ Usage
    $ mklink .bashrc .myconfig/.bashrc
    $ mklink .bash_profile .myconfig\.bashrc
    ```
-   (cmd.exe as Administrator)
+   (Run cmd.exe as Administrator)
 
 
    - Linux
