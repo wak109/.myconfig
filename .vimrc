@@ -18,7 +18,12 @@ Plugin 'VundleVim/Vundle.vim'
 "
 "
 Plugin 'leafgarland/typescript-vim'
+Plugin 'godlygeek/tabular'
+Plugin 'plasticboy/vim-markdown'
+Plugin 'scrooloose/nerdtree'
 "
 "
 call vundle#end()
 filetype plugin indent on
+
+nmap <F6> :NERDTreeToggle<CR>
