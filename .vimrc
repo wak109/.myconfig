@@ -19,7 +19,6 @@ Plugin 'VundleVim/Vundle.vim'
 "
 Plugin 'leafgarland/typescript-vim'
 Plugin 'godlygeek/tabular'
-Plugin 'plasticboy/vim-markdown'
 Plugin 'scrooloose/nerdtree'
 "
 "

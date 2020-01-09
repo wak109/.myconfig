@@ -29,6 +29,7 @@ Usage
    $ mklink .xinitrc .myconfig\.xinitrc
    $ mklink .bashrc .myconfig/.bashrc
    $ mklink .bash_profile .myconfig\.bashrc
+   $ mklink .vimrc .myconfig\.vimrc
    ```
    (Run cmd.exe as Administrator)
 
@@ -40,6 +41,7 @@ Usage
    $ ln -s .myconfig/.xinitrc
    $ ln -s .myconfig/.bashrc .bashrc
    $ ln -s .myconfig/.bashrc .bash_profile
+   $ ln -s .myconfig/.vimrc .vimrc
    ```
 
 3. (OPTIONAL) Create the file (~/.pathlist) to add more paths
