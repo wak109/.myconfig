@@ -26,6 +26,21 @@ function is_interactive() {
 }
 
 ################################################################
+# Remove comments (beginning with #) and empty lines from file
+#
+# Arguments:
+#   $1 : filename
+# Returns:
+#   Contents of file except comments and empty lines
+################################################################
+
+function trim_lines() {
+    local filename="$1"
+
+    cat "${filename}" | sed '/^#/d' | sed '/^\s*$/d'
+}
+
+################################################################
 # Convert pathname list file to PATH format
 #
 # Arguments:
@@ -41,9 +56,9 @@ function read_plist() {
     if [[ ! -e ${filename} ]]; then
         echo ""
     elif $(type cygpath > /dev/null 2>&1); then 
-        cat "${filename}" | xargs cygpath | paste -s -d ':' -
+        trim_lines "${filename}" | xargs cygpath | paste -s -d ':' -
     else
-        cat "${filename}" | paste -s -d ':' -
+        trim_lines "${filename}" | paste -s -d ':' -
     fi
 }
 
